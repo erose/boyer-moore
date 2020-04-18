@@ -79,6 +79,8 @@ def compare_from_front(needle, haystack, haystack_position, haystack_forwards_in
             # -             -
             # 
             jump_ahead_by = haystack_forwards_index.get(needle_char, len(haystack))
+
+            # Dan's claim: if we do more work on the index building, we can be smarter here.
             jump_ahead_by = max(1, jump_ahead_by)
             return False, jump_ahead_by
 
@@ -88,8 +90,8 @@ import unittest
 class TestForwardsBoyerMoore(unittest.TestCase):
     def test_it_works(self):
         self.assertTrue(search("aba", "baabac", Direction.forwards))
-        # import pdb; pdb.set_trace()
-        self.assertTrue(search("cab", ("x" * 1) + "cab", Direction.forwards))
+        self.assertTrue(search("cab", "xyzcab", Direction.forwards))
+        self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.forwards))
         self.assertTrue(search("a", "baabac", Direction.forwards))
 
         self.assertFalse(search("abx", "baabac", Direction.forwards))
@@ -98,16 +100,22 @@ class TestForwardsBoyerMoore(unittest.TestCase):
 class TestBackwardsBoyerMoore(unittest.TestCase):
     def test_it_works(self):
         self.assertTrue(search("aba", "baabac", Direction.backwards))
-        self.assertTrue(search("a", "baabac", Direction.backwards))
+        self.assertTrue(search("cab", "xyzcab", Direction.backwards))
         self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.backwards))
+        self.assertTrue(search("a", "baabac", Direction.backwards))
 
         self.assertFalse(search("abx", "baabac", Direction.backwards))
         self.assertFalse(search("abaaaaa", "baabac", Direction.backwards)) # Needle longer than haystack.
 
 import timeit
 def benchmark():
-    return timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.forwards), number=10000)
+    iterations = int(1e4)
+    backwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.backwards), number=iterations)
+    print(f"Backwards: {backwards_time}")
+
+    forwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.forwards), number=iterations)
+    print(f"Forwards: {forwards_time}")
 
 if __name__ == "__main__":
-    unittest.main()
-    # print(benchmark())
+    # unittest.main()
+    benchmark()
