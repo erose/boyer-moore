@@ -6,14 +6,16 @@ class Direction(enum.Enum):
     forwards = 'forwards'
     backwards = 'backwards'
 
-def search(needle, haystack, direction=Direction.forwards):
+def search(needle, haystack, direction):
     if direction == Direction.backwards:
         needle_backwards_index = build_backwards_index(needle)
+        haystack_position = len(needle) - 1
     if direction == Direction.forwards:
         haystack_forwards_index = build_forwards_index(haystack)
+        haystack_position = 0
 
-    haystack_position = len(needle) - 1
     while True:
+        # If we've run off the end of the haystack, we know the string is not to be found.
         if haystack_position >= len(haystack):
             return False
 
@@ -77,6 +79,7 @@ def compare_from_front(needle, haystack, haystack_position, haystack_forwards_in
             # -             -
             # 
             jump_ahead_by = haystack_forwards_index.get(needle_char, len(haystack))
+            jump_ahead_by = max(1, jump_ahead_by)
             return False, jump_ahead_by
 
     return True, None
@@ -85,7 +88,10 @@ import unittest
 class TestForwardsBoyerMoore(unittest.TestCase):
     def test_it_works(self):
         self.assertTrue(search("aba", "baabac", Direction.forwards))
+        # import pdb; pdb.set_trace()
+        self.assertTrue(search("cab", ("x" * 1) + "cab", Direction.forwards))
         self.assertTrue(search("a", "baabac", Direction.forwards))
+
         self.assertFalse(search("abx", "baabac", Direction.forwards))
         self.assertFalse(search("abaaaaa", "baabac", Direction.forwards)) # Needle longer than haystack.
 
@@ -93,8 +99,15 @@ class TestBackwardsBoyerMoore(unittest.TestCase):
     def test_it_works(self):
         self.assertTrue(search("aba", "baabac", Direction.backwards))
         self.assertTrue(search("a", "baabac", Direction.backwards))
+        self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.backwards))
+
         self.assertFalse(search("abx", "baabac", Direction.backwards))
         self.assertFalse(search("abaaaaa", "baabac", Direction.backwards)) # Needle longer than haystack.
 
+import timeit
+def benchmark():
+    return timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.forwards), number=10000)
+
 if __name__ == "__main__":
     unittest.main()
+    # print(benchmark())
