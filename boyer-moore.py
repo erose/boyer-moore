@@ -108,7 +108,7 @@ class TestBackwardsBoyerMoore(unittest.TestCase):
         self.assertFalse(search("abaaaaa", "baabac", Direction.backwards)) # Needle longer than haystack.
 
 import timeit
-def benchmark():
+def benchmark_with_timeit():
     iterations = int(1e4)
     backwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.backwards), number=iterations)
     print(f"Backwards: {backwards_time}")
@@ -116,6 +116,11 @@ def benchmark():
     forwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.forwards), number=iterations)
     print(f"Forwards: {forwards_time}")
 
+import cProfile
+def benchmark_with_cprofile():
+    cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.backwards)')
+    cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.forwards)')
+
 if __name__ == "__main__":
     # unittest.main()
-    benchmark()
+    benchmark_with_cprofile()
