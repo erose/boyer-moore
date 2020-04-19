@@ -204,7 +204,8 @@ def benchmark_with_timeit():
         ("needle contains a char not in haystack", "xab", "baccabaccabaccabaccabaccabacca" * 10),
         ("300x other chars (not in needle) and then needle at the end", "cab", ("xyz" * 100) + "cab"),
         ("pretty long needle", "cab" * 5, "baccabaccabaccabaccabaccabacca" * 10),
-        ("a lot of far-apart partial matches", "apple", 100 * (100 * "x" + "app")),
+        ("a lot of far-apart partial matches; interstital non-match", "apple", 100 * (100 * "x" + "app")),
+        ("a lot of far-apart partial matches; interstital match", "apple", 100 * (100 * "a" + "app")),
     ]
 
     for case_name, needle, haystack in test_cases:
