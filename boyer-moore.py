@@ -93,57 +93,39 @@ def compare_from_front(needle, haystack, haystack_position, haystack_forwards_in
     return True, None
 
 import unittest
-class TestForwardsBoyerMoore(unittest.TestCase):
+class BoyerMooreTestCase(unittest.TestCase):
+    def do_test_for_direction(self, direction):
+        self.assertTrue(search("aba", "baabac", direction))
+        self.assertTrue(search("cab", "xyzcab", direction))
+        self.assertTrue(search("cab", ("xyz" * 100) + "cab", direction))
+        self.assertTrue(search("a", "baabac", direction))
+
+        self.assertFalse(search("abx", "baabac", direction))
+        self.assertFalse(search("abaaaaa", "baabac", direction)) # Needle longer than haystack.
+
+class TestForwardsBoyerMoore(BoyerMooreTestCase):
     def test_it_works(self):
-        self.assertTrue(search("aba", "baabac", Direction.forwards))
-        self.assertTrue(search("cab", "xyzcab", Direction.forwards))
-        self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.forwards))
-        self.assertTrue(search("a", "baabac", Direction.forwards))
+        self.do_test_for_direction(Direction.forwards)
 
-        self.assertFalse(search("abx", "baabac", Direction.forwards))
-        self.assertFalse(search("abaaaaa", "baabac", Direction.forwards)) # Needle longer than haystack.
-
-class TestForwardsWithNeedleIndexBoyerMoore(unittest.TestCase):
+class TestForwardsWithNeedleIndexBoyerMoore(BoyerMooreTestCase):
     def test_it_works(self):
-        self.assertTrue(search("aba", "baabac", Direction.forwards_with_needle_index))
-        self.assertTrue(search("cab", "xyzcab", Direction.forwards_with_needle_index))
-        self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.forwards_with_needle_index))
-        self.assertTrue(search("a", "baabac", Direction.forwards_with_needle_index))
+        self.do_test_for_direction(Direction.forwards_with_needle_index)
 
-        self.assertFalse(search("abx", "baabac", Direction.forwards_with_needle_index))
-        self.assertFalse(search("abaaaaa", "baabac", Direction.forwards_with_needle_index)) # Needle longer than haystack.
-
-class TestBackwardsBoyerMoore(unittest.TestCase):
+class TestBackwardsBoyerMoore(BoyerMooreTestCase):
     def test_it_works(self):
-        self.assertTrue(search("aba", "baabac", Direction.backwards))
-        self.assertTrue(search("cab", "xyzcab", Direction.backwards))
-        self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.backwards))
-        self.assertTrue(search("a", "baabac", Direction.backwards))
-
-        self.assertFalse(search("abx", "baabac", Direction.backwards))
-        self.assertFalse(search("abaaaaa", "baabac", Direction.backwards)) # Needle longer than haystack.
+        self.do_test_for_direction(Direction.backwards)
 
 import timeit
 def benchmark_with_timeit():
     iterations = int(1e4)
-    backwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.backwards), number=iterations)
-    print(f"Backwards: {backwards_time}")
-
-    forwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.forwards), number=iterations)
-    print(f"Forwards: {forwards_time}")
-
-    forwards_with_needle_index_time = (
-        timeit.timeit(
-          lambda: search("cab", ("xyz" * 100) + "cab",
-                         Direction.forwards_with_needle_index),
-          number=iterations))
-    print(f"Forwards with needle index: {forwards_with_needle_index_time}")
+    for direction in Direction:
+        time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", direction), number=iterations)
+        print(f"{direction.value}: {time}")
 
 import cProfile
 def benchmark_with_cprofile():
-    cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.backwards)')
-    cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.forwards)')
-    cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.forwards_with_needle_index)')
+    for direction in ['Direction.backwards', 'Direction.forwards', 'Direction.forwards_with_needle_index']:
+        cProfile.run(f'search("cab", ("xyz" * 10000) + "cab", {direction})')
 
 if __name__ == "__main__":
     benchmark_with_timeit()
