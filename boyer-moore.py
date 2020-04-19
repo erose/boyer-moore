@@ -39,7 +39,6 @@ def build_backwards_index(s) -> Dict[str, int]:
     Returns a dictionary which maps each character in s to its index, starting from the back of the
     string. (e.g. the final character is at index 0).
     """
-
     result = {}
     for i, c in enumerate(reversed(s)):
         if c in result:
@@ -53,7 +52,6 @@ def build_forwards_index(s) -> Dict[str, int]:
     Returns a dictionary which maps each character in s to its index, starting from the front of the
     string. (e.g. the first character is at index 0).
     """
-
     result = {}
     for i, c in enumerate(s):
         if c in result:
@@ -138,7 +136,7 @@ def branching_search(needle, haystack):
     possible = positions[needle[0]]
     for c in needle[1:]:
         possible = { p for p in positions[c] if p - 1 in possible }
-    
+
     return len(possible) != 0
 
 import unittest
@@ -195,18 +193,18 @@ import timeit
 def benchmark_with_timeit():
     iterations = int(1e4)
     ways_of_doing_it = [
-        *[
-            (direction.value, f'search(needle, haystack, {direction})') for direction in Direction
-        ],
-        ("naive_search", 'naive_search(needle, haystack)'),
-        ("branching_search", 'branching_search(needle, haystack)'),
-        ("native 'in'", 'needle in haystack'),
+      (direction.value, f'search(needle, haystack, {direction})') for direction in Direction
+    ] + [
+      ("naive_search", 'naive_search(needle, haystack)'),
+      ("branching_search", 'branching_search(needle, haystack)'),
+      ("native 'in'", 'needle in haystack'),
     ]
     test_cases = [
         ("same chars from needle organized at random", "cab", "cbabcbabcbabcbcbabcabbcbb"), # I keyboard-mashed to generate this haystack.
         ("needle contains a char not in haystack", "xab", "baccabaccabaccabaccabaccabacca" * 10),
         ("300x other chars (not in needle) and then needle at the end", "cab", ("xyz" * 100) + "cab"),
         ("pretty long needle", "cab" * 5, "baccabaccabaccabaccabaccabacca" * 10),
+        ("a lot of far-apart partial matches", "apple", 100 * (100 * "x" + "app")),
     ]
 
     for case_name, needle, haystack in test_cases:
