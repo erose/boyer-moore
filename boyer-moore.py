@@ -13,9 +13,11 @@ def search(needle, haystack, direction):
         haystack_position = len(needle) - 1
     if direction == Direction.forwards:
         haystack_forwards_index = build_forwards_index(haystack)
+        print("haystack_forwards_index", haystack_forwards_index)
         haystack_position = 0
     if direction == Direction.forwards_with_needle_index:
         needle_forwards_index = build_forwards_index(needle)
+        print("needle_forwards_index", needle_forwards_index)
         haystack_position = 0
 
     while True:
@@ -61,7 +63,7 @@ def compare_from_back(needle, haystack, haystack_position, needle_backwards_inde
             # cbacba  --> cbacba
             # -             -
             #
-            jump_ahead_by = needle_backwards_index.get(needle_char, len(needle))
+            jump_ahead_by = needle_backwards_index.get(haystack_char, len(needle))
 
             # Dan's claim: if we do more work on the index building, we can be smarter here.
             jump_ahead_by = max(1, jump_ahead_by)
