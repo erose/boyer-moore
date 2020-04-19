@@ -4,6 +4,7 @@ import collections
 
 class Direction(enum.Enum):
     forwards = 'forwards'
+    forwards_with_needle_index = 'forwards_with_needle_index'
     backwards = 'backwards'
 
 def search(needle, haystack, direction):
@@ -12,6 +13,9 @@ def search(needle, haystack, direction):
         haystack_position = len(needle) - 1
     if direction == Direction.forwards:
         haystack_forwards_index = build_forwards_index(haystack)
+        haystack_position = 0
+    if direction == Direction.forwards_with_needle_index:
+        needle_forwards_index = build_forwards_index(needle)
         haystack_position = 0
 
     while True:
@@ -23,6 +27,8 @@ def search(needle, haystack, direction):
             result, jump_ahead_by = compare_from_back(needle, haystack, haystack_position, needle_backwards_index)
         if direction == Direction.forwards:
             result, jump_ahead_by = compare_from_front(needle, haystack, haystack_position, haystack_forwards_index)
+        if direction == Direction.forwards_with_needle_index:
+            result, jump_ahead_by = compare_from_front(needle, haystack, haystack_position, needle_forwards_index)
         if result is True:
             return True
         else:
@@ -44,17 +50,17 @@ def compare_from_back(needle, haystack, haystack_position, needle_backwards_inde
     for k in range(0, len(needle)):
         needle_char = needle[-(k + 1)]
         haystack_char = haystack[haystack_position - k]
-        
+
         if needle_char != haystack_char:
             # Snap to the next ocurrence of this character.
             # e.g.
-            # 
+            #
             # aba     -->   aba
             # -             -
-            # 
+            #
             # cbacba  --> cbacba
             # -             -
-            # 
+            #
             jump_ahead_by = needle_backwards_index.get(needle_char, len(needle))
 
             # Dan's claim: if we do more work on the index building, we can be smarter here.
@@ -71,13 +77,13 @@ def compare_from_front(needle, haystack, haystack_position, haystack_forwards_in
         if needle_char != haystack_char:
             # Snap to the next ocurrence of this character.
             # e.g.
-            # 
+            #
             # aba     -->   aba
             # -             -
-            # 
+            #
             # cbacba  --> cbacba
             # -             -
-            # 
+            #
             jump_ahead_by = haystack_forwards_index.get(needle_char, len(haystack))
 
             # Dan's claim: if we do more work on the index building, we can be smarter here.
@@ -96,6 +102,16 @@ class TestForwardsBoyerMoore(unittest.TestCase):
 
         self.assertFalse(search("abx", "baabac", Direction.forwards))
         self.assertFalse(search("abaaaaa", "baabac", Direction.forwards)) # Needle longer than haystack.
+
+class TestForwardsWithNeedleIndexBoyerMoore(unittest.TestCase):
+    def test_it_works(self):
+        self.assertTrue(search("aba", "baabac", Direction.forwards_with_needle_index))
+        self.assertTrue(search("cab", "xyzcab", Direction.forwards_with_needle_index))
+        self.assertTrue(search("cab", ("xyz" * 100) + "cab", Direction.forwards_with_needle_index))
+        self.assertTrue(search("a", "baabac", Direction.forwards_with_needle_index))
+
+        self.assertFalse(search("abx", "baabac", Direction.forwards_with_needle_index))
+        self.assertFalse(search("abaaaaa", "baabac", Direction.forwards_with_needle_index)) # Needle longer than haystack.
 
 class TestBackwardsBoyerMoore(unittest.TestCase):
     def test_it_works(self):
@@ -116,11 +132,20 @@ def benchmark_with_timeit():
     forwards_time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", Direction.forwards), number=iterations)
     print(f"Forwards: {forwards_time}")
 
+    forwards_with_needle_index_time = (
+        timeit.timeit(
+          lambda: search("cab", ("xyz" * 100) + "cab",
+                         Direction.forwards_with_needle_index),
+          number=iterations))
+    print(f"Forwards with needle index: {forwards_with_needle_index_time}")
+
 import cProfile
 def benchmark_with_cprofile():
     cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.backwards)')
     cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.forwards)')
+    cProfile.run('search("cab", ("xyz" * 10000) + "cab", Direction.forwards_with_needle_index)')
 
 if __name__ == "__main__":
-    # unittest.main()
+    benchmark_with_timeit()
     benchmark_with_cprofile()
+    unittest.main()
