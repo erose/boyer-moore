@@ -173,6 +173,7 @@ class BoyerMooreTestCase(unittest.TestCase):
         self.assertTrue(search("cab", "xyzcab", direction))
         self.assertTrue(search("cab", ("xyz" * 100) + "cab", direction))
         self.assertTrue(search("a", "baabac", direction))
+        self.assertTrue(search("apple", "xxxxaapple", direction))
 
         self.assertFalse(search("abx", "baabac", direction))
         self.assertFalse(search("abaaaaa", "baabac", direction)) # Needle longer than haystack.
