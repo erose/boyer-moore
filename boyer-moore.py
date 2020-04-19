@@ -169,20 +169,23 @@ def benchmark_with_timeit():
     iterations = int(1e4)
     ways_of_doing_it = [
         *[
-            (direction.value, lambda needle, haystack: search(needle, haystack, direction)) for direction in Direction
+            (direction.value, f'search(needle, haystack, {direction})') for direction in Direction
         ],
-        ("naive_search", lambda needle, haystack: naive_search(needle, haystack)),
-        ("branching_search", lambda needle, haystack: branching_search(needle, haystack)),
-        ("native 'in'", lambda needle, haystack: needle in haystack),
+        ("naive_search", 'naive_search(needle, haystack)'),
+        ("branching_search", 'branching_search(needle, haystack)'),
+        ("native 'in'", 'needle in haystack'),
     ]
     test_cases = [
-        ("cab", "xyz" * 100 + "cab")
+        ("random c's, a's, b's", "cab", "cbabcbabcbabcbcbabcabbcbb"), # I keyboard-mashed to generate this haystack.
+        ("xyzxyz...cab", "cab", ("xyz" * 100) + "cab"),
     ]
 
-    for name, code in ways_of_doing_it:
-        for test_needle, test_haystack in test_cases:
-            time = timeit.timeit(lambda: code(test_needle, test_haystack), number=iterations)
-            print(f"{name}: {time}")
+    for case_name, needle, haystack in test_cases:
+        print(case_name)
+        for way_name, code in ways_of_doing_it:
+            time = timeit.timeit(code, number=iterations, globals={'needle': needle, 'haystack': haystack, **globals()})
+            print(f"    {way_name}: {time}")
+        print()
 
 import cProfile
 def benchmark_with_cprofile():
