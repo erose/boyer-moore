@@ -13,11 +13,9 @@ def search(needle, haystack, direction):
         haystack_position = len(needle) - 1
     if direction == Direction.forwards:
         haystack_forwards_index = build_forwards_index(haystack)
-        print("haystack_forwards_index", haystack_forwards_index)
         haystack_position = 0
     if direction == Direction.forwards_with_needle_index:
         needle_forwards_index = build_forwards_index(needle)
-        print("needle_forwards_index", needle_forwards_index)
         haystack_position = 0
 
     while True:
