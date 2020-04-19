@@ -195,8 +195,8 @@ def benchmark_with_timeit():
         ("native 'in'", 'needle in haystack'),
     ]
     test_cases = [
-        # I keyboard-mashed to generate this haystack.
-        ("same chars from needle organized at random", "cab", "cbabcbabcbabcbcbabcabbcbb"),
+        ("same chars from needle organized at random", "cab", "cbabcbabcbabcbcbabcabbcbb"), # I keyboard-mashed to generate this haystack.
+        ("needle contains a char not in haystack", "xab", "baccabaccabaccabaccabaccabacca"),
         ("300x other chars (not in needle) and then needle at the end", "cab", ("xyz" * 100) + "cab"),
     ]
 
