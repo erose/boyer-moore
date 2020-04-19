@@ -86,6 +86,10 @@ def compare_from_back(needle, haystack, haystack_position, needle_backwards_inde
     return True, None
 
 def compare_from_front(needle, haystack, haystack_position, haystack_forwards_index) -> Tuple[int, bool]:
+    # If we run out of haystack before we run out of needle, we can't match.
+    if len(needle) > len(haystack) - haystack_position:
+        return False, len(needle)
+
     for k in range(0, len(needle)):
         needle_char = needle[k]
         haystack_char = haystack[haystack_position + k]
@@ -112,6 +116,10 @@ def compare_from_front(needle, haystack, haystack_position, haystack_forwards_in
 def naive_search(needle, haystack):
     for i in range(len(haystack)):
         for j in range(len(needle)):
+            # If we run out of haystack, we can't match.
+            if i + j >= len(haystack):
+                return False
+
             if haystack[i + j] != needle[j]:
                 break
         else:
@@ -196,8 +204,9 @@ def benchmark_with_timeit():
     ]
     test_cases = [
         ("same chars from needle organized at random", "cab", "cbabcbabcbabcbcbabcabbcbb"), # I keyboard-mashed to generate this haystack.
-        ("needle contains a char not in haystack", "xab", "baccabaccabaccabaccabaccabacca"),
+        ("needle contains a char not in haystack", "xab", "baccabaccabaccabaccabaccabacca" * 10),
         ("300x other chars (not in needle) and then needle at the end", "cab", ("xyz" * 100) + "cab"),
+        ("pretty long needle", "cab" * 5, "baccabaccabaccabaccabaccabacca" * 10),
     ]
 
     for case_name, needle, haystack in test_cases:
