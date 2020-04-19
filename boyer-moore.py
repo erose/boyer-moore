@@ -39,16 +39,28 @@ def build_backwards_index(s) -> Dict[str, int]:
     Returns a dictionary which maps each character in s to its index, starting from the back of the
     string. (e.g. the final character is at index 0).
     """
-    unique_characters = set(s)
-    return { c: len(s) - (s.rindex(c) + 1) for c in unique_characters }
+
+    result = {}
+    for i, c in enumerate(reversed(s)):
+        if c in result:
+            continue
+        result[c] = i
+
+    return result
 
 def build_forwards_index(s) -> Dict[str, int]:
     """
     Returns a dictionary which maps each character in s to its index, starting from the front of the
     string. (e.g. the first character is at index 0).
     """
-    unique_characters = set(s)
-    return { c: s.index(c) for c in unique_characters }
+
+    result = {}
+    for i, c in enumerate(s):
+        if c in result:
+            continue
+        result[c] = i
+
+    return result
 
 def compare_from_back(needle, haystack, haystack_position, needle_backwards_index) -> Tuple[int, bool]:
     for k in range(0, len(needle)):
@@ -142,6 +154,13 @@ class BranchingSearchTestCase(unittest.TestCase):
         self.assertFalse(branching_search("abx", "baabac"))
         self.assertFalse(branching_search("abaaaaa", "baabac")) # Needle longer than haystack.
 
+class TestBuildIndexes(unittest.TestCase):
+    def test_build_backwards_index(self):
+        self.assertEqual(build_backwards_index("asab"), {'b': 0, 'a': 1, 's': 2})
+
+    def test_build_forwards_index(self):
+        self.assertEqual(build_forwards_index("asab"), {'a': 0, 's': 1, 'b': 3})
+
 class BoyerMooreTestCase(unittest.TestCase):
     def do_test_for_direction(self, direction):
         self.assertTrue(search("aba", "baabac", direction))
@@ -176,8 +195,9 @@ def benchmark_with_timeit():
         ("native 'in'", 'needle in haystack'),
     ]
     test_cases = [
-        ("random c's, a's, b's", "cab", "cbabcbabcbabcbcbabcabbcbb"), # I keyboard-mashed to generate this haystack.
-        ("xyzxyz...cab", "cab", ("xyz" * 100) + "cab"),
+        # I keyboard-mashed to generate this haystack.
+        ("same chars from needle organized at random", "cab", "cbabcbabcbabcbcbabcabbcbb"),
+        ("300x other chars (not in needle) and then needle at the end", "cab", ("xyz" * 100) + "cab"),
     ]
 
     for case_name, needle, haystack in test_cases:
@@ -190,6 +210,7 @@ def benchmark_with_timeit():
 import cProfile
 def benchmark_with_cprofile():
     for direction in ['Direction.backwards', 'Direction.forwards', 'Direction.forwards_with_needle_index']:
+        print(f'{direction}')
         cProfile.run(f'search("cab", ("xyz" * 100) + "cab", {direction})')
 
 if __name__ == "__main__":
