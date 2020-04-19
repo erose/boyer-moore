@@ -43,6 +43,10 @@ def build_backwards_index(s) -> Dict[str, int]:
     return { c: len(s) - (s.rindex(c) + 1) for c in unique_characters }
 
 def build_forwards_index(s) -> Dict[str, int]:
+    """
+    Returns a dictionary which maps each character in s to its index, starting from the front of the
+    string. (e.g. the first character is at index 0).
+    """
     unique_characters = set(s)
     return { c: s.index(c) for c in unique_characters }
 
