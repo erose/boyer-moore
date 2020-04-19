@@ -96,7 +96,52 @@ def compare_from_front(needle, haystack, haystack_position, haystack_forwards_in
 
     return True, None
 
+# Whole different search algorithms, for comparison.
+def naive_search(needle, haystack):
+    for i in range(len(haystack)):
+        for j in range(len(needle)):
+            if haystack[i + j] != needle[j]:
+                break
+        else:
+            return True
+
+    return False
+
+def branching_search(needle, haystack):
+    # For each character in haystack, what positions does it occur at?
+    positions = collections.defaultdict(set)
+    for i, c in enumerate(haystack):
+        positions[c].add(i)
+
+    # Winnow down the possible positions; for each character, check its positions and see if they
+    # are possible given the positions of the previous characters.
+    possible = positions[needle[0]]
+    for c in needle[1:]:
+        possible = { p for p in positions[c] if p - 1 in possible }
+    
+    return len(possible) != 0
+
 import unittest
+class NaiveSearchTestCase(unittest.TestCase):
+    def test_it_works(self):
+        self.assertTrue(naive_search("aba", "baabac"))
+        self.assertTrue(naive_search("cab", "xyzcab"))
+        self.assertTrue(naive_search("cab", ("xyz" * 100) + "cab"))
+        self.assertTrue(naive_search("a", "baabac"))
+
+        self.assertFalse(naive_search("abx", "baabac"))
+        self.assertFalse(naive_search("abaaaaa", "baabac")) # Needle longer than haystack.
+
+class BranchingSearchTestCase(unittest.TestCase):
+    def test_it_works(self):
+        self.assertTrue(branching_search("aba", "baabac"))
+        self.assertTrue(branching_search("cab", "xyzcab"))
+        self.assertTrue(branching_search("cab", ("xyz" * 100) + "cab"))
+        self.assertTrue(branching_search("a", "baabac"))
+
+        self.assertFalse(branching_search("abx", "baabac"))
+        self.assertFalse(branching_search("abaaaaa", "baabac")) # Needle longer than haystack.
+
 class BoyerMooreTestCase(unittest.TestCase):
     def do_test_for_direction(self, direction):
         self.assertTrue(search("aba", "baabac", direction))
@@ -122,14 +167,27 @@ class TestBackwardsBoyerMoore(BoyerMooreTestCase):
 import timeit
 def benchmark_with_timeit():
     iterations = int(1e4)
-    for direction in Direction:
-        time = timeit.timeit(lambda: search("cab", ("xyz" * 100) + "cab", direction), number=iterations)
-        print(f"{direction.value}: {time}")
+    ways_of_doing_it = [
+        *[
+            (direction.value, lambda needle, haystack: search(needle, haystack, direction)) for direction in Direction
+        ],
+        ("naive_search", lambda needle, haystack: naive_search(needle, haystack)),
+        ("branching_search", lambda needle, haystack: branching_search(needle, haystack)),
+        ("native 'in'", lambda needle, haystack: needle in haystack),
+    ]
+    test_cases = [
+        ("cab", "xyz" * 100 + "cab")
+    ]
+
+    for name, code in ways_of_doing_it:
+        for test_needle, test_haystack in test_cases:
+            time = timeit.timeit(lambda: code(test_needle, test_haystack), number=iterations)
+            print(f"{name}: {time}")
 
 import cProfile
 def benchmark_with_cprofile():
     for direction in ['Direction.backwards', 'Direction.forwards', 'Direction.forwards_with_needle_index']:
-        cProfile.run(f'search("cab", ("xyz" * 10000) + "cab", {direction})')
+        cProfile.run(f'search("cab", ("xyz" * 100) + "cab", {direction})')
 
 if __name__ == "__main__":
     benchmark_with_timeit()
