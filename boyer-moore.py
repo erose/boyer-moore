@@ -12,7 +12,20 @@ def search(needle, haystack, direction):
         needle_backwards_index = build_backwards_index(needle)
         haystack_position = len(needle) - 1
     if direction == Direction.forwards:
-        haystack_forwards_index = build_forwards_index(haystack)
+        # Subtle: this is a specialization of a forward index because the algo
+        # needs to jump to the last character in a run before jumping over the
+        # whole run.
+        #
+        # Note: This is *not* the same as a backwards index! For backwards
+        # indices, the 0 value is at the tail of the string. Here the 0 value is
+        # at the head of the string, but for in the case of runs, the index will
+        # skip us to the _last_ character in the run.
+        #
+        # search('aba', 'aaba'):
+        #
+        # index: {'a': 1, 'b': 2}
+        haystack_forwards_index = build_forwards_index(
+            haystack, run_strategy=RunStrategy.prefer_last)
         haystack_position = 0
     if direction == Direction.forwards_with_needle_index:
         needle_forwards_index = build_forwards_index(needle)
@@ -47,16 +60,37 @@ def build_backwards_index(s) -> Dict[str, int]:
 
     return result
 
-def build_forwards_index(s) -> Dict[str, int]:
+class RunStrategy(enum.Enum):
+    """How to handle runs of the same letter."""
+    # aaa
+    # ^
+    # use this one
+    prefer_first = 'prefer_first'
+
+    # aaa
+    #   ^
+    #   use this one
+    prefer_last = 'prefer_last'
+
+def build_forwards_index(
+    s, run_strategy=RunStrategy.prefer_first) -> Dict[str, int]:
     """
     Returns a dictionary which maps each character in s to its index, starting from the front of the
     string. (e.g. the first character is at index 0).
     """
     result = {}
+
+    last_seen_letter = None
     for i, c in enumerate(s):
         if c in result:
-            continue
-        result[c] = i
+            if run_strategy == RunStrategy.prefer_first:
+                continue
+            elif run_strategy == RunStrategy.prefer_last:
+                if c == last_seen_letter:
+                    result[c] = i
+        else:
+          result[c] = i
+        last_seen_letter = c
 
     return result
 
@@ -164,8 +198,23 @@ class TestBuildIndexes(unittest.TestCase):
     def test_build_backwards_index(self):
         self.assertEqual(build_backwards_index("asab"), {'b': 0, 'a': 1, 's': 2})
 
-    def test_build_forwards_index(self):
-        self.assertEqual(build_forwards_index("asab"), {'a': 0, 's': 1, 'b': 3})
+    def test_build_forwards_index_prefer_first_in_run(self):
+        self.assertEqual(
+            build_forwards_index("aasab", run_strategy=RunStrategy.prefer_first),
+            {'a': 0, 's': 2, 'b': 4})
+
+        self.assertEqual(
+            build_forwards_index("aaba", run_strategy=RunStrategy.prefer_first),
+            {'a': 0, 'b': 2})
+
+    def test_build_forwards_index_prefer_last_in_run(self):
+        self.assertEqual(
+            build_forwards_index("aasab", run_strategy=RunStrategy.prefer_last),
+            {'a': 1, 's': 2, 'b': 4})
+
+        self.assertEqual(
+            build_forwards_index("aaba", run_strategy=RunStrategy.prefer_last),
+            {'a': 1, 'b': 2})
 
 class BoyerMooreTestCase(unittest.TestCase):
     def do_test_for_direction(self, direction):
