@@ -2,17 +2,23 @@ from typing import *
 import enum
 import collections
 
+# This function contains lots of commented-out print statements which are useful for understanding
+# the behavior at runtime. Comment them back in to use them. It would be nice to support e.g. a
+# DEBUG flag which enables printing, but when we tried this we found it actually meaningfully hurt
+# performance.
 def horspool_search(needle, haystack):
-    needle_index = build_index(needle)
-    print(needle_index)
+    needle_index = build_backwards_index(needle)
+    # print(needle_index)
     p = 0
 
     while True:
         # If we've run off the end of the haystack, we know the string is not to be found.
-        if p+len(needle) > len(haystack)-1:
+        # print("p+len(needle)", p+len(needle))
+        # print("len(haystack)", len(haystack))
+        if p+len(needle) > len(haystack):
             return False
 
-        print(needle, haystack[p:p+len(needle)])
+        # print(needle, haystack[p:p+len(needle)])
         if needle == haystack[p:p+len(needle)]:
             return True
         else:
@@ -26,24 +32,29 @@ def horspool_search(needle, haystack):
             #            -                                     -
             #     abdacabaabd              -->               abdacabaabd
             #            -                                     -
-            last_haystack_char = haystack[p+len(needle)]
-            print("p", p)
-            print("last_haystack_char", last_haystack_char)
+            last_haystack_char = haystack[p+len(needle)-1]
+            # print("p", p)
+            # print("last_haystack_char", last_haystack_char)
             jump_ahead_by = needle_index.get(last_haystack_char, len(needle))
             jump_ahead_by = max(jump_ahead_by, 1) # Always need to make some progress.
 
-            print("jump_ahead_by", jump_ahead_by)
+            # print("jump_ahead_by", jump_ahead_by)
             p += jump_ahead_by
 
-def build_index(s) -> Dict[str, int]:
+        # print()
+
+def build_backwards_index(s) -> Dict[str, int]:
     """
     Returns a dictionary which maps each character in s except the last one to the index of its
-    last ocurrence.
+    last ocurrence, counting backwards. For example:
+    
+    build_index("abaca") == { "a": 2, "c": 1, "b": 3 }
     """
     result = {}
 
-    for i, c in enumerate(s[:-1]):
-        result[c] = i
+    for i, c in enumerate(reversed(s[:-1])):
+        if c not in result:
+            result[c] = i
     
     return result
 
@@ -98,9 +109,8 @@ class BranchingSearchTestCase(unittest.TestCase):
         self.assertFalse(branching_search("abaaaaa", "baabac")) # Needle longer than haystack.
 
 class TestBuildIndexes(unittest.TestCase):
-    def test_build_index(self):
-        self.assertEqual(build_index("aasab"), {'a': 3, 's': 2})
-        self.assertEqual(build_index("aaba"), {'a': 1, 'b': 2})
+    def test_build_backwards_index(self):
+        self.assertEqual(build_backwards_index("abaca"), { "a": 1, "c": 0, "b": 2 })
 
 class HorspoolTestCase(unittest.TestCase):
     def test_it_works(self):
@@ -144,6 +154,6 @@ def benchmark_with_cprofile():
     cProfile.run(f'horspool_search("cab", ("xyz" * 100) + "cab")')
 
 if __name__ == "__main__":
-    # benchmark_with_timeit()
-    # benchmark_with_cprofile()
+    benchmark_with_timeit()
+    benchmark_with_cprofile()
     unittest.main()
