@@ -5,15 +5,15 @@ import collections
 def horspool_search(needle, haystack):
     needle_index = build_index(needle)
     print(needle_index)
-    p = len(needle) - 1
+    p = 0
 
     while True:
         # If we've run off the end of the haystack, we know the string is not to be found.
-        if p >= len(haystack):
+        if p+len(needle) > len(haystack)-1:
             return False
 
-        print(needle, haystack[(p - len(needle) + 1):p+1])
-        if needle == haystack[(p - len(needle) + 1):p+1]:
+        print(needle, haystack[p:p+len(needle)])
+        if needle == haystack[p:p+len(needle)]:
             return True
         else:
             # Look at the last character of the slice of haystack we're focused on, find the index
@@ -26,7 +26,7 @@ def horspool_search(needle, haystack):
             #            -                                     -
             #     abdacabaabd              -->               abdacabaabd
             #            -                                     -
-            last_haystack_char = haystack[p]
+            last_haystack_char = haystack[p+len(needle)]
             print("p", p)
             print("last_haystack_char", last_haystack_char)
             jump_ahead_by = needle_index.get(last_haystack_char, len(needle))
@@ -104,16 +104,15 @@ class TestBuildIndexes(unittest.TestCase):
 
 class HorspoolTestCase(unittest.TestCase):
     def test_it_works(self):
-        # self.assertTrue(horspool_search("aba", "baabac"))
-        # self.assertTrue(horspool_search("cab", "xyzcab"))
-        # self.assertTrue(horspool_search("cab", ("xyz" * 100) + "cab"))
-        # self.assertTrue(horspool_search("a", "baabac"))
+        self.assertTrue(horspool_search("aba", "baabac"))
+        self.assertTrue(horspool_search("cab", "xyzcab"))
+        self.assertTrue(horspool_search("cab", ("xyz" * 100) + "cab"))
+        self.assertTrue(horspool_search("a", "baabac"))
         self.assertTrue(horspool_search("apple", "xxxxaapple"))
-        # self.assertTrue(horspool_search("cdc", "bcdcba"))
-        # self.assertTrue(horspool_search("ccc", "bcccba"))
-
-        # self.assertFalse(horspool_search("abx", "baabac"))
-        # self.assertFalse(horspool_search("abaaaaa", "baabac")) # Needle longer than haystack.
+        self.assertTrue(horspool_search("cdc", "bcdcba"))
+        self.assertTrue(horspool_search("ccc", "bcccba"))
+        self.assertFalse(horspool_search("abx", "baabac"))
+        self.assertFalse(horspool_search("abaaaaa", "baabac")) # Needle longer than haystack.
 
 import timeit
 def benchmark_with_timeit():
