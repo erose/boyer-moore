@@ -25,7 +25,7 @@ def horspool_search(needle, haystack):
             # Look at the last character of the slice of haystack we're focused on, find the index
             # of its last ocurrence in the needle-with-last-character-chopped-off, and jump forward
             # by enough to make sure these are aligned.
-            # 
+            #
             # TODO: explain why
             #
             # abaaabbababcabdacbaabababc   -->   abaaabbababcabdacbaabababc
@@ -47,7 +47,7 @@ def build_backwards_index(s) -> Dict[str, int]:
     """
     Returns a dictionary which maps each character in s except the last one to the index of its
     last ocurrence, counting backwards. For example:
-    
+
     build_index("abaca") == { "a": 2, "c": 1, "b": 3 }
     """
     result = {}
@@ -55,7 +55,7 @@ def build_backwards_index(s) -> Dict[str, int]:
     for i, c in enumerate(reversed(s[:-1])):
         if c not in result:
             result[c] = i
-    
+
     return result
 
 # Whole different search algorithms, for comparison.
